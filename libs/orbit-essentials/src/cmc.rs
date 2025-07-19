@@ -1,11 +1,11 @@
 use crate::utils::check_balance_before_transfer;
 use candid::{CandidType, Deserialize, Principal};
-use ic_cdk::api::call::call_with_payment128;
-use ic_cdk::api::management_canister::main::CanisterSettings;
+use ic_cdk::api::management_canister::main::{CanisterSettings, CreateCanisterArgument};
 use serde::Serialize;
 
-/// The CMC canister is used to deploy a canister on a subnet of choice.
-const CMC_CANISTER_ID: Principal = Principal::from_slice(&[0, 0, 0, 0, 0, 0, 0, 4, 1, 1]);
+// LOCAL DEVELOPMENT ONLY - This fork bypasses CMC for local development
+// DO NOT DEPLOY TO MAINNET - Management canister cannot create canisters with initial cycles on mainnet
+// WARNING: This code is modified to use management canister instead of CMC
 
 #[derive(
     CandidType, Deserialize, Serialize, Clone, Debug, Hash, Eq, PartialEq, Ord, PartialOrd,
@@ -45,19 +45,27 @@ pub async fn create_canister(
     subnet_selection: Option<SubnetSelection>,
     initial_cycles: u128,
 ) -> Result<Principal, String> {
+    // Log ignored subnet selection for debugging
+    if let Some(selection) = &subnet_selection {
+        ic_cdk::println!(
+            "LOCAL DEV: Ignoring subnet selection {:?}, using local subnet",
+            selection
+        );
+    }
+    
     check_balance_before_transfer(initial_cycles).await?;
-    let create_canister = CreateCanister {
-        subnet_selection,
+    
+    let create_args = CreateCanisterArgument {
         settings: None,
     };
-    call_with_payment128::<_, (Result<Principal, CreateCanisterError>,)>(
-        CMC_CANISTER_ID,
-        "create_canister",
-        (create_canister,),
+    
+    // Use management canister directly for local development
+    let (canister_id,) = ic_cdk::api::management_canister::main::create_canister(
+        create_args,
         initial_cycles,
     )
     .await
-    .map(|res| res.0)
-    .map_err(|(_, err)| err.to_string())?
-    .map_err(|CreateCanisterError::Refunded { create_error, .. }| create_error)
+    .map_err(|e| format!("Failed to create canister: {:?}", e))?;
+    
+    Ok(canister_id.canister_id)
 }

@@ -1,3 +1,5 @@
+> ⚠️ **LOCAL DEVELOPMENT FORK** - This fork bypasses CMC for local development only. DO NOT deploy to mainnet - it will not function correctly.
+
 > This project is **still in Alpha**. We are happy to answer questions if they are raised as issues in this github repo.
 
 [![Internet Computer portal](https://img.shields.io/badge/InternetComputer-grey?logo=internet%20computer&style=for-the-badge)](https://internetcomputer.org)

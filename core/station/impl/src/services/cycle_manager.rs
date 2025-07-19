@@ -112,26 +112,12 @@ fn get_obtain_cycle_config(strategy: &CycleObtainStrategy) -> Option<ObtainCycle
     match strategy {
         CycleObtainStrategy::Disabled => None,
         CycleObtainStrategy::MintFromNativeToken { account_id } => {
-            if let Some(account) = ACCOUNT_REPOSITORY.get(&AccountKey { id: *account_id }) {
-                Some(ObtainCyclesOptions {
-                    obtain_cycles: Arc::new(MintCycles {
-                        ledger: Arc::new(IcLedgerCanister::new(MAINNET_LEDGER_CANISTER_ID)),
-                        cmc: Arc::new(IcCyclesMintingCanister::new(
-                            MAINNET_CYCLES_MINTING_CANISTER_ID,
-                        )),
-                        from_subaccount: ic_ledger_types::Subaccount(
-                            InternetComputer::subaccount_from_seed(&account.seed),
-                        ),
-                    }),
-                })
-            } else {
-                print(format!(
-                    "Account with id `{}` not found, cannot create ObtainCyclesOptions",
-                    Uuid::from_bytes(*account_id).hyphenated()
-                ));
-
-                None
-            }
+            // LOCAL DEV: Cycle minting bypassed - unlimited cycles available
+            ic_cdk::println!(
+                "LOCAL DEV: Cycle minting bypassed for account {} - unlimited cycles available locally",
+                Uuid::from_bytes(*account_id).hyphenated()
+            );
+            None // Return None to skip cycle minting in local development
         }
         CycleObtainStrategy::WithdrawFromCyclesLedger { account_id } => {
             if let Some(account) = ACCOUNT_REPOSITORY.get(&AccountKey { id: *account_id }) {
